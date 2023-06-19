@@ -1,1 +1,63 @@
-pipeline file to create
+pipeline {
+    agent any
+
+    stages {
+            stage('Clean up') {
+            steps {
+                // clean up the jenkins directory before 
+                echo "cleaning up.."
+                sh  'rm -rf project' 
+            }
+        }
+        
+         stage('Clone') {
+            steps {
+                // clone github repository
+                git 'https://github.com/noaavisrur/alpaca-flask.git' 
+            }
+        }
+        
+        stage('Zip Directory') {
+            steps {
+                // Zip the directory
+                echo "ziping directory.."
+               sh 'tar -czvf flask.tar.gz flask '
+            }
+        }
+        
+        stage('Push to S3') {
+            steps {
+                // Configure AWS credentials
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
+                    // Push the tar archive to S3 bucket
+                    sh 'aws s3 cp flask.tar.gz s3://jenkins-first-project/flask.tar.gz'
+                }
+            }
+        }
+         stage('Start EC2 Instance') {
+            steps {
+                // Configure AWS credentials
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
+                // Install AWS CLI (if not already installed)
+                    sh 'pip install awscli --upgrade --user'
+                    // Start EC2 instance
+                    sh 'aws ec2 start-instances --instance-ids i-08c7bf6c9e86db03d --region us-east-1'
+                }
+            }
+        }
+      stage('Copy from S3 to EC2 Instance') {
+    steps {
+        // Configure AWS credentials
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
+            // Change permissions on the destination directory
+            sshagent(['noaavisrurssh']) {
+                sh 'ssh -o StrictHostKeyChecking=no ec2-user@54.234.38.147 "chmod +w /home/ec2-user"'
+            }
+            
+            // Copy zip file from S3 to EC2 instance
+            sh 'aws s3 cp s3://jenkins-first-project/flask.tzr.gz /home/ec2-user'
+        }
+    }
+}
+    }
+}
