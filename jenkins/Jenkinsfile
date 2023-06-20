@@ -41,23 +41,79 @@ pipeline {
                 // Install AWS CLI (if not already installed)
                     sh 'pip install awscli --upgrade --user'
                     // Start EC2 instance
-                    sh 'aws ec2 start-instances --instance-ids i-08c7bf6c9e86db03d --region us-east-1'
+                    sh 'aws ec2 start-instances --instance-ids i-0cfdbf11a0eef79f0 --region us-east-1'
                 }
             }
+        }
+        stage('Clean up ec2-user testing directory') {
+    steps {
+         // Configure AWS credentials
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
+        // clean up testind directory and delete last flask file
+        sshagent(['noaavisrurssh']) {
+         sh "ssh -i ${env.ssh_key} -o StrictHostKeyChecking=no ec2-user@${env.test_server_ip} 'find /home/ec2-user/testing -mindepth 1 -delete && rm /home/ec2-user/flask.tar.gz'"
+        }
+        }
+    }
         }
       stage('Copy from S3 to EC2 Instance') {
     steps {
         // Configure AWS credentials
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
-            // Change permissions on the destination directory
+            // Copy the file from S3 to Jenkins workspace
+            sh 'aws s3 cp s3://jenkins-first-project/flask.tar.gz /var/lib/jenkins'
+    // Copy the file from Jenkins workspace to EC2 instance using SSH
             sshagent(['noaavisrurssh']) {
-                sh 'ssh -o StrictHostKeyChecking=no ec2-user@54.234.38.147 "chmod +w /home/ec2-user"'
+                sh "scp -i  ${env.ssh_key}  /var/lib/jenkins/flask.tar.gz ec2-user@${env.test_server_ip}:/home/ec2-user"
             }
-            
-            // Copy zip file from S3 to EC2 instance
-            sh 'aws s3 cp s3://jenkins-first-project/flask.tzr.gz /home/ec2-user'
         }
     }
+      }
+     stage('create directory with copied flask file') {
+  steps {
+    // Configure AWS credentials
+    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
+      // Extract tar file in AWS EC2
+      sshagent(credentials: ['noaavisrurssh']) {
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user && cp flask.tar.gz /home/ec2-user/testing'"
+      }
+    }
+  }
+}
+ stage('extarct tar flask ') {
+  steps {
+    // Configure AWS credentials
+    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
+      // Extract tar file in AWS EC2
+      sshagent(credentials: ['noaavisrurssh']) {
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/testing && tar xfzv flask.tar.gz '"
+      }
+    }
+  }
+}
+stage('installing packages') {
+  steps {
+    // Configure AWS credentials
+    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
+      // Extract tar file in AWS EC2
+      sshagent(credentials: ['noaavisrurssh']) {
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'sudo dnf install python3'"
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'sudo dnf install python3-pip'"
+      }
+    }
+  }
+}
+stage('flask run') {
+  steps {
+    // Configure AWS credentials
+    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
+      // install requ and flask run
+      sshagent(credentials: ['noaavisrurssh']) {
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/testing/flask/flask-app && sudo pip3 install -r requirements.txt'"
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/testing/flask/flask-app && flask run --host=0.0.0.0'"
+      }
+    }
+  }
 }
     }
 }
