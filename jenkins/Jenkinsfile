@@ -109,11 +109,12 @@ stage('testing') {
     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
       // install requ and flask run
       sshagent(credentials: ['noaavisrurssh']) {
-        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/testing/flask/flask-app && sudo pip3 install -r requirements.txt'"
-        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user && bash test_script.sh'"
+          sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/testing/flask/flask-app && sudo pip3 install -r requirements.txt'"
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user && clone https://github.com/noaavisrur/Devops.git'"    
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/jenkins && bash test_script.sh'" 
       }
     }
    }
-  }
+}  
  }
 }
