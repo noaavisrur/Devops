@@ -11,9 +11,6 @@ else
     kill $pid
     echo "Flask process stopped."
 fi
-This script uses pgrep to find the PID of the Flask process based on the process name (flask run). If the PID is found, it terminates the process using the kill command. If the Flask process is not found, it prints a message indicating that the process was not found.
-
-Please ensure that you have the necessary permissions to execute the kill command and terminate processes.
 
 # Define the port to check
 port=5000
