@@ -29,13 +29,13 @@
 
     - name: Set executable permissions for playbook
       file:
-        path: /home/ec2-user/flaskrun/flask-app/app.py
+        path: /home/ec2-user/flaskrun/flask/flask-app/app.py
         mode: ugo+rx
       become: true
 
     - name: Configure Flask service
       template:
-        src: /var/lib/jenkins/workspace/project/Devops/flask.service.j2
+        src: /var/lib/jenkins/workspace/project/Devops/jenkins/flask.service.j2
         dest: /etc/systemd/system/flask.service
       notify:
         - Restart Flask service
