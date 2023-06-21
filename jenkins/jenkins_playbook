@@ -1,6 +1,6 @@
 ---
 - name: Flask Playbook
-  hosts: test_server 
+  hosts: test_server_group 
   gather_facts: true
 
   tasks:
