@@ -2,6 +2,8 @@
 - name: Flask Playbook
   hosts: test_server_group 
   gather_facts: true
+  vars:
+    flask_service_template: '/var/lib/jenkins/workspace/project/Devops/jenkins/flask.service.j2'
 
   tasks:
     - name: Update apt cache
