@@ -4,7 +4,7 @@
 port=5000
 
 # Check if the port is available
-if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null; then
+if ss -tln | grep ":$port " >/dev/null; then
     echo "Port $port is already in use by another process."
     exit 1
 else
