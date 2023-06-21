@@ -1,29 +1,5 @@
 #!/bin/bash
 
-# Find the process ID (PID) of the Flask process
-pid=$(pgrep -f "flask run")
-
-if [[ -z $pid ]]; then
-    echo "Flask process not found."
-else
-    # Terminate the Flask process
-    echo "Stopping Flask process with PID $pid..."
-    kill $pid
-    echo "Flask process stopped."
-fi
-
-# Define the port to check
-port=5000
-
-# Check if the port is open
-if nc -z localhost $port >/dev/null; then
-    echo "Port $port is open."
-    exit 0
-else
-    echo "Port $port is not open."
-    exit 1
-fi
-
 # Start Flask server in the background
 cd /home/ec2-user/testing/flask/flask-app
 flask run --host=0.0.0.0 &
