@@ -3,13 +3,13 @@
 # Define the port to check
 port=5000
 
-# Check if the port is available
-if ss -tln | grep ":$port " >/dev/null; then
-    echo "Port $port is already in use by another process."
-    exit 1
-else
-    echo "Port $port is available."
+# Check if the port is open
+if nc -z localhost $port >/dev/null; then
+    echo "Port $port is open."
     exit 0
+else
+    echo "Port $port is not open."
+    exit 1
 fi
 
 # Start Flask server in the background
