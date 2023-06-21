@@ -24,7 +24,7 @@
 
     - name: Install project requirements
       pip:
-        requirements: /home/ec2-user/flask/flask-app/requirements.txt
+        requirements: /home/ec2-user/flaskrun/flask/flask-app/requirements.txt
       become: true
 
     - name: Set executable permissions for playbook
