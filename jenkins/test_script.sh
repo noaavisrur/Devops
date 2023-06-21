@@ -4,11 +4,13 @@
 port=5000
 
 # Check if the port is available
-if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null; then
-    echo "Port $port is already in use. Stopping the existing Flask process..."
-    pkill -f "flask run"
-    sleep 2  # Wait for the process to terminate
-fi
+f lsof -Pi :$port -sTCP:LISTEN -t >/dev/null; then
+    echo "Port $port is already in use by another process."
+    exit 1
+else
+    echo "Port $port is available."
+    exit 0
+f
 
 # Start Flask server in the background
 cd /home/ec2-user/testing/flask/flask-app
