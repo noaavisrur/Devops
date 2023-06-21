@@ -12,8 +12,9 @@ pipeline {
         
          stage('Clone') {
             steps {
-                // clone github repository
-                git 'https://github.com/noaavisrur/alpaca-flask.git' 
+                // clone github repository & playbook
+                git clone 'https://github.com/noaavisrur/alpaca-flask.git' 
+                git  clone 'https://github.com/noaavisrur/Devops.git'
             }
         }
         
@@ -42,20 +43,13 @@ pipeline {
                     sh 'pip install awscli --upgrade --user'
                     // Start EC2 instance
                     sh 'aws ec2 start-instances --instance-ids i-0cfdbf11a0eef79f0 --region us-east-1'
-                }
-            }
+                    //Clean up ec2-user flaskrun directory
+                       sshagent(['noaavisrurssh']) {
+                         sh "ssh -i ${env.ssh_key} -o StrictHostKeyChecking=no ec2-user@${env.test_server_ip} 'find /home/ec2-user/flaskrun -mindepth 1 -delete && rm /home/ec2-user/flask.tar.gz'"
         }
-        stage('Clean up ec2-user testing directory') {
-    steps {
-         // Configure AWS credentials
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
-        // clean up testind directory and delete last flask file
-        sshagent(['noaavisrurssh']) {
-         sh "ssh -i ${env.ssh_key} -o StrictHostKeyChecking=no ec2-user@${env.test_server_ip} 'find /home/ec2-user/testing -mindepth 1 -delete && rm /home/ec2-user/flask.tar.gz'"
-        }
-        }
+      }
+     }
     }
-        }
       stage('Copy from S3 to EC2 Instance') {
     steps {
         // Configure AWS credentials
@@ -65,28 +59,10 @@ pipeline {
     // Copy the file from Jenkins workspace to EC2 instance using SSH
             sshagent(['noaavisrurssh']) {
                 sh "scp -i  ${env.ssh_key}  /var/lib/jenkins/flask.tar.gz ec2-user@${env.test_server_ip}:/home/ec2-user"
-            }
-        }
-    }
-      }
-     stage('create directory with copied flask file') {
-  steps {
-    // Configure AWS credentials
-    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
-      // Extract tar file in AWS EC2
-      sshagent(credentials: ['noaavisrurssh']) {
-        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user && cp flask.tar.gz /home/ec2-user/testing'"
-      }
-    }
-  }
-}
- stage('extarct tar flask ') {
-  steps {
-    // Configure AWS credentials
-    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
-      // Extract tar file in AWS EC2
-      sshagent(credentials: ['noaavisrurssh']) {
-        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/testing && tar xfzv flask.tar.gz '"
+                //create directory with copied flask file
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user && cp flask.tar.gz /home/ec2-user/flaskrun'"
+                //extarct tar flask
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/flaskrun && tar xfzv flask.tar.gz '"
       }
     }
   }
@@ -96,10 +72,9 @@ stage('installing packages') {
     // Configure AWS credentials
     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
       // Extract tar file in AWS EC2
-      sshagent(credentials: ['noaavisrurssh']) {
-        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'sudo dnf install python3'"
-        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'sudo dnf install python3-pip'"
-           sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'sudo dnf install git -y'"
+          sshagent(credentials: ['noaavisrurssh']) {
+             sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'sudo dnf install ansible'"
+             sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'sudo dnf install git -y'"
       }
     }
   }
@@ -108,15 +83,17 @@ stage('testing') {
   steps {
     // Configure AWS credentials
     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
-      // install requ and flask run
-      sshagent(credentials: ['noaavisrurssh']) {
-          sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/testing/flask/flask-app && sudo pip3 install -r requirements.txt'"
-           sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'rm -rf /home/ec2-user/Devops'"   
-        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user && git clone https://github.com/noaavisrur/Devops.git'"    
-        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/Devops/jenkins && bash test_script.sh'" 
+        //run playbook 
+        sh 'ansible-playbook -i /var/lib/jenkins/workspace/project/Devops/inventory.ini /var/lib/jenkins/workspace/project/Devops/jenkins_playbook '
+         sshagent(credentials: ['noaavisrurssh']) {
+           //clean up for test script
+              sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'rm -rf /home/ec2-user/Devops'"   
+              sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/Devops/jenkins && bash test_script.sh'" 
       }
     }
    }
-}  
+  }  
  }
 }
+
+  
