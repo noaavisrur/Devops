@@ -1,11 +1,6 @@
 #!/bin/bash
 port=5000  # Replace with the actual port number of your Flask server
 
-# Start Flask server in the background
-cd /home/ec2-user/testing/flask/flask-app
-flask run --host=0.0.0.0 &
-sleep 5  # Wait for server to start
-
 # Make HTTP request to Flask server and capture response
 response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$port)
 
