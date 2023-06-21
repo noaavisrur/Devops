@@ -1,4 +1,5 @@
 #!/bin/bash
+port=5000  # Replace with the actual port number of your Flask server
 
 # Start Flask server in the background
 cd /home/ec2-user/testing/flask/flask-app
