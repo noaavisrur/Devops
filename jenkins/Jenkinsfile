@@ -45,9 +45,11 @@ pipeline {
                     sh 'pip install awscli --upgrade --user'
                     // Start EC2 instance
                     sh 'aws ec2 start-instances --instance-ids i-0cfdbf11a0eef79f0 --region us-east-1'
-                    // Clean up ec2-user flaskrun directory
+                    //create Clean up ec2-user flaskrun directory
                     sshagent(['noaavisrurssh']) {
-                        sh "ssh -i ${env.ssh_key} -o StrictHostKeyChecking=no ec2-user@${env.test_server_ip} 'find /home/ec2-user/flaskrun -mindepth 1 -delete && rm /home/ec2-user/flask.tar.gz'"
+                        sh "ssh -i ${env.ssh_key} -o StrictHostKeyChecking=no ec2-user@${env.test_server_ip} ' cd /home/ec2-user && mkdir -p flaskrun'"
+                        sh "ssh -i ${env.ssh_key} -o StrictHostKeyChecking=no ec2-user@${env.test_server_ip} 'find /home/ec2-user/flaskrun -mindepth 1 -delete '"
+                        sh "ssh -i ${env.ssh_key} -o StrictHostKeyChecking=no ec2-user@${env.test_server_ip} 'rm -rf /home/ec2-user/Devops && rm /home/ec2-user/flask.tar.gz'"
                     }
                 }
             }
@@ -88,5 +90,19 @@ pipeline {
                 }
             }
         }
+             stage('deploy') {
+                 steps{
+                 // Configure AWS credentials
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'noaavisrur']]) {
+            // Start EC2 instance
+                    sh 'aws ec2 start-instances --instance-ids i-09e50d587ef089b33 --region us-east-1'
+                    // Clean up ec2-user flaskrun directory
+                    sshagent(['noaavisrurssh']) {
+                         sh "scp -i ${env.ssh_key} /var/lib/jenkins/flask.tar.gz ec2-user@${env.prod_server_ip}:/home/ec2-user"
+                    }
+                    sh 'ansible-playbook -i /var/lib/jenkins/workspace/project/Devops/jenkins/inventory.ini /var/lib/jenkins/workspace/project/Devops/jenkins/jenkins_prodplaybook'
+        }
+    }
+    }
     }
 }
