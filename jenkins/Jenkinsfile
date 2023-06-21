@@ -110,10 +110,10 @@ stage('flask run') {
       // install requ and flask run
       sshagent(credentials: ['noaavisrurssh']) {
         sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/testing/flask/flask-app && sudo pip3 install -r requirements.txt'"
-        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user/testing/flask/flask-app && flask run --host=0.0.0.0'"
+        sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'cd /home/ec2-user && bash test_script.sh'"
       }
     }
+   }
   }
-}
-    }
+ }
 }
