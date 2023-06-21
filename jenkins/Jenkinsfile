@@ -99,6 +99,7 @@ stage('installing packages') {
       sshagent(credentials: ['noaavisrurssh']) {
         sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'sudo dnf install python3'"
         sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'sudo dnf install python3-pip'"
+           sh "ssh -i ${env.ssh_key} ec2-user@${env.test_server_ip} 'sudo pip3 install git'"
       }
     }
   }
