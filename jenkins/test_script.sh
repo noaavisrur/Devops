@@ -5,8 +5,9 @@ port=5000
 
 # Check if the port is available
 if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null; then
-    echo "Port $port is already in use. Exiting..."
-    exit 1
+    echo "Port $port is already in use. Stopping the existing Flask process..."
+    pkill -f "flask run"
+    sleep 2  # Wait for the process to terminate
 fi
 
 # Start Flask server in the background
