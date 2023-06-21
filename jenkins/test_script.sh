@@ -1,12 +1,21 @@
 #!/bin/bash
 
+# Define the port to check
+port=5000
+
+# Check if the port is available
+if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null; then
+    echo "Port $port is already in use. Exiting..."
+    exit 1
+fi
+
 # Start Flask server in the background
 cd /home/ec2-user/testing/flask/flask-app
 flask run --host=0.0.0.0 &
 sleep 5  # Wait for server to start
 
 # Make HTTP request to Flask server and capture response
-response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000)
+response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$port)
 
 # Print response
 echo "HTTP response code: ${response}"
@@ -18,5 +27,3 @@ else
     echo "Flask directory test failed!"
     exit 1  # Exit with non-zero status to indicate failure
 fi
-
-
