@@ -1,5 +1,6 @@
 pipeline {
     agent any
+
     environment {
         // Initialize the initial version tag
         versionTag = '1.0'
@@ -7,6 +8,7 @@ pipeline {
         repositoryName = 'alpaca-flask'
         dockerHubUsername = 'noaavisrur'
     }
+
     stages {
         stage('Clean up & Packaging') {
             steps {
@@ -20,16 +22,20 @@ pipeline {
                     versionTag = newTag.toString()
                 }
                 // Delete the previous version of the Docker image
-                sh "docker rmi noaavisrur/alpaca-flask:${previousTag}"
+                sh "docker rmi ${dockerHubUsername}/${repositoryName}:${previousTag}"
                 // Use the updated version tag in the Docker build command
-                sh "cd /home/noa/flask_proj/flask/alpaca-flask && sudo docker build -t noaavisrur/alpaca-flask:${versionTag} ."
-                 // Delete the repository from Docker Hub
-                withCredentials([string(credentialsId: 'docker-hub_cre', variable: '${env.docker_access_token}]) {
+                sh "cd /home/noa/flask_proj/flask/alpaca-flask && sudo docker build -t ${dockerHubUsername}/${repositoryName}:${versionTag} ."
+            }
+        }
+
+        stage('Delete repository from Docker Hub') {
+            steps {
+                withCredentials([string(credentialsId: 'docker-hub_cre', variable: 'docker_access_key')]) {
                     sh "docker logout"
-                    sh "docker login --username ${dockerHubUsername} --password ${env.docker_access_token}"
-                    sh "docker repository rm ${dockerHubUsername}/${repositoryName}"
-                }        
+                    sh "docker login --username ${dockerHubUsername} --password $DOCKERHUB_TOKEN"
+                    sh "docker rmi ${dockerHubUsername}/${repositoryName}"
+                }
+            }
         }
     }
-  }
 }
