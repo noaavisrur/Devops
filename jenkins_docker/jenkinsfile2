@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Clean up & Packaging') {
             steps {
-                sh 'sudo rm -rf *'
+                cleanWs()
                 sh 'sudo git clone https://github.com/noaavisrur/alpaca-flask.git'
                 // Increment the version tag by 0.1
                 script {
