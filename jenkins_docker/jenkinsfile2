@@ -32,7 +32,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'docker-hub_cre', variable: 'docker_access_key')]) {
                     sh "docker logout"
-                    sh "docker login --username ${dockerHubUsername} --password $DOCKERHUB_TOKEN"
+                    sh "docker login --username ${dockerHubUsername} --password $docker_access_key"
                     sh "docker rmi ${dockerHubUsername}/${repositoryName}"
                 }
             }
