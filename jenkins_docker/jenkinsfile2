@@ -1,1 +1,35 @@
-
+pipeline {
+    agent any
+    environment {
+        // Initialize the initial version tag
+        versionTag = '1.0'
+        previousTag = ''
+        repositoryName = 'alpaca-flask'
+        dockerHubUsername = 'noaavisrur'
+    }
+    stages {
+        stage('Clean up & Packaging') {
+            steps {
+                sh 'sudo rm -rf *'
+                sh 'sudo git clone https://github.com/noaavisrur/alpaca-flask.git'
+                // Increment the version tag by 0.1
+                script {
+                    def currentTag = versionTag.toFloat()
+                    def newTag = currentTag + 0.1
+                    previousTag = versionTag // Store the previous version tag
+                    versionTag = newTag.toString()
+                }
+                // Delete the previous version of the Docker image
+                sh "docker rmi noaavisrur/alpaca-flask:${previousTag}"
+                // Use the updated version tag in the Docker build command
+                sh "cd /home/noa/flask_proj/flask/alpaca-flask && sudo docker build -t noaavisrur/alpaca-flask:${versionTag} ."
+                 // Delete the repository from Docker Hub
+                withCredentials([string(credentialsId: 'docker-hub_cre', variable: '${env.docker_access_token}]) {
+                    sh "docker logout"
+                    sh "docker login --username ${dockerHubUsername} --password ${env.docker_access_token}"
+                    sh "docker repository rm ${dockerHubUsername}/${repositoryName}"
+                }        
+        }
+    }
+  }
+}
