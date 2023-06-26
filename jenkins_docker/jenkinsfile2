@@ -14,13 +14,13 @@ pipeline {
     stages {
         stage('Clean up & clone') {
             steps {
-               sh 'sudo rm -rf $WORKSPACE/*'
+                sh 'sudo rm -rf $WORKSPACE/*'
                 sh 'sudo rm -rf $WORKSPACE/.*'
                 sh 'sudo git clone https://github.com/noaavisrur/alpaca-flask.git'
-                // Increment the version tag by 0.1
-}
-}
-stage('set version tag') {
+            }
+        }
+
+        stage('Set version tag') {
             steps {
                 script {
                     def currentTag = versionTag.toFloat()
@@ -28,15 +28,15 @@ stage('set version tag') {
                     previousTag = versionTag // Store the previous version tag
                     versionTag = newTag.toString()
                 }
-}
-}
-stage('Build and Push Docker Image') {
+            }
+        }
+
+        stage('Build and Push Docker Image') {
             steps {
                 // Use the updated version tag in the Docker build command
                 sh "cd /home/noa/flask_proj/flask/alpaca-flask && sudo docker build -t ${dockerHubUsername}/${repositoryName}:${versionTag} ."
                 // Delete the previous version of the Docker image
                 sh "docker rmi ${dockerHubUsername}/${repositoryName}:${previousTag}"
-                
             }
         }
 
