@@ -21,7 +21,7 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 // Use the updated version tag in the Docker build command
-                    dir('Sela-Projects2/Flask-Project') {
+                    dir('flask_project/alpaca-flask/flask/flask-app') {
                     sh "docker build -t ${dockerHubUsername}/${repositoryName}:latest ."
                     sh "docker push ${dockerHubUsername}/${repositoryName}:latest"
                 }
