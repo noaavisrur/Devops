@@ -14,7 +14,8 @@ pipeline {
     stages {
         stage('Clean up & clone') {
             steps {
-                cleanWs()
+                 sh 'rm -rf $WORKSPACE/*'
+                sh 'rm -rf $WORKSPACE/.*'
                 sh 'sudo git clone https://github.com/noaavisrur/alpaca-flask.git'
                 // Increment the version tag by 0.1
 }
