@@ -14,14 +14,14 @@ pipeline {
     stages {
         stage('Clean up & clone') {
             steps {
-               sh 'sudo rm -rf *'
-               sh 'sudo git clone https://github.com/noaavisrur/alpaca-flask.git'
+                sh 'rm -rf *'
+                sh 'git clone https://github.com/noaavisrur/alpaca-flask.git'
             }
         }
+        
         stage('Build and Push Docker Image') {
             steps {
-                // Use the updated version tag in the Docker build command
-                    dir('/var/lib/jenkins/workspace/flask_project/alpaca-flask/flask/flask-app') {
+                dir('alpaca-flask/flask/flask-app') {
                     sh "docker build -t ${dockerHubUsername}/${repositoryName}:latest ."
                     sh "docker push ${dockerHubUsername}/${repositoryName}:latest"
                 }
