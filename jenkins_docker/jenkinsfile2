@@ -14,7 +14,7 @@ pipeline {
     stages {
         stage('Clean up & clone') {
             steps {
-                sh 'rm -rf *'
+                sh 'sudo rm -rf *'
                 sh 'git clone https://github.com/noaavisrur/alpaca-flask.git'
             }
         }
