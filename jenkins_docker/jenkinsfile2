@@ -33,7 +33,7 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 // Use the updated version tag in the Docker build command
-                sh "cd /var/lib/jenkins/workspace/flask_project/alpaca-flask && sudo docker build -t ${dockerHubUsername}/${repositoryName}:${versionTag} ."
+                sh "cd /var/lib/jenkins/workspace/flask_project/alpaca-flask/flask/flask-app && sudo docker build -t ${dockerHubUsername}/${repositoryName}:${versionTag} ."
                 // Delete the previous version of the Docker image
                 sh "docker rmi ${dockerHubUsername}/${repositoryName}:${previousTag}"
             }
