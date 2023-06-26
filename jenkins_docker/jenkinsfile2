@@ -22,7 +22,7 @@ pipeline {
         stage('Set version tag') {
             steps {
                 script {
-                    def currentTag = versionTag.toFloat()
+                    def currentTag = sh(script: "docker images ${dockerHubUsername}/${repositoryName} --format '{{.Tag}}'", returnStdout: true).trim()
                     def newTag = currentTag + 0.1
                     previousTag = versionTag // Store the previous version tag
                     versionTag = newTag.toString()
