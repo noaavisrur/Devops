@@ -18,34 +18,10 @@ pipeline {
                sh 'sudo git clone https://github.com/noaavisrur/alpaca-flask.git'
             }
         }
-
-        stage('Set version tag') {
-            steps {
-                script {
-                    def currentTag = sh(script: "docker images ${dockerHubUsername}/${repositoryName} --format '{{.Tag}}'", returnStdout: true).trim()
-                    def newTag = currentTag + 0.1
-                    previousTag = versionTag // Store the previous version tag
-                    versionTag = newTag.toString()
-                }
-            }
-        }
-
         stage('Build and Push Docker Image') {
             steps {
                 // Use the updated version tag in the Docker build command
-                sh "cd /var/lib/jenkins/workspace/flask_project/alpaca-flask/flask/flask-app && sudo docker build -t ${dockerHubUsername}/${repositoryName}:${versionTag} ."
-                // Delete the previous version of the Docker image
-                sh "docker rmi ${dockerHubUsername}/${repositoryName}:${previousTag}"
-            }
-        }
-
-        stage('Delete repository from Docker Hub') {
-            steps {
-                withCredentials([string(credentialsId: 'docker-hub_cre', variable: 'docker_access_key')]) {
-                    sh "docker logout"
-                    sh "docker login --username ${dockerHubUsername} --password $docker_access_key"
-                    sh "docker rmi ${dockerHubUsername}/${repositoryName}"
-                }
+                sh "cd /var/lib/jenkins/workspace/flask_project/alpaca-flask/flask/flask-app && sudo docker build -t ${dockerHubUsername}/${repositoryName}:latest ."
             }
         }
     }
